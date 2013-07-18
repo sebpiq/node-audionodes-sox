@@ -1,4 +1,5 @@
 var assert = require('assert')
+  , async = require('async')
   , utils = require('../lib/utils')
 
 describe('parseFormat', function() {
@@ -35,11 +36,22 @@ describe('getFileFormat', function() {
   })
 
   it('should return an error if the file doesn\'t exist', function(done) {
-    utils.getFileFormat(__dirname + '/sounds/wotwotwot.wav', function(err, format) {
-      assert.ok(err)
-      assert.ok(!format)
-      done()
-    })
+    async.series([
+      function(next) {
+        utils.getFileFormat(__dirname + '/sounds/wotwotwot.wav', function(err, format) {
+          assert.ok(err)
+          assert.ok(!format)
+          next()
+        })
+      },
+      function(next) {
+        utils.getFileFormat('wotwotwot', function(err, format) {
+          assert.ok(err)
+          assert.ok(!format)
+          done()
+        })
+      }
+    ])
   })
 
   it('should return an error if the file isn\'t a soundfile', function(done) {
