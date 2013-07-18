@@ -1,0 +1,32 @@
+{
+  "name": "sox-audionodes",
+  "version": "0.1.0",
+  "author": "Sébastien Piquemal <sebpiq@gmail.com>",
+  "description": "An AudioNode for node-web-audio-api, using effects from SoX.",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "keywords": [
+    "audio",
+    "sound",
+    "music",
+    "web audio",
+    "web audio api",
+    "dsp",
+    "sox"
+  ],
+  "dependencies" : {
+    "underscore": "1.4.x",
+    "async": "0.2.x",
+    "audiobuffer": "*"
+  },
+  "analyze": false,
+  "devDependencies": {
+    "mocha": "1.12.x"
+  }, 
+  "license": "MIT",
+  "engines": {
+    "node": ">=0.10"
+  }
+}
