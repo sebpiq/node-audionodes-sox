@@ -19,6 +19,8 @@ describe('SoxEffect', function() {
         , ended = false
 
       soxEffect.on('ready', function() {
+
+        // Testing the format
         assert.deepEqual(soxEffect.format, {
           numberOfChannels: 1,
           bitDepth: 16,
@@ -26,12 +28,16 @@ describe('SoxEffect', function() {
           endianness: 'LE', signed: true
         })
 
+        // When all the data has been read, test that we got what we expected
         soxEffect.on('end', function() {
           ended = true
+
           // Concatenate all the blocks in one 
           allAudio = _.reduce(blocks, function(all, block) {
             return all.concat(block)
           }, new AudioBuffer(1, 0, 44100))
+          assert.equal(Math.floor(allAudio.length / 4410), 21)
+
           // Test that we got teh expected values
           _.range(21).forEach(function(i) {
             sliced = allAudio.slice(i * 4410, (i + 1) * 4410)
@@ -40,6 +46,7 @@ describe('SoxEffect', function() {
           done()
         })
 
+        // Reading all the data block by block
         var audioTick = function() {
           block = soxEffect._tick()
           assert.equal(block.numberOfChannels, 1)
@@ -61,6 +68,8 @@ describe('SoxEffect', function() {
         , ended = false
 
       soxEffect.on('ready', function() {
+
+        // Testing the format
         assert.deepEqual(soxEffect.format, {
           numberOfChannels: 2,
           bitDepth: 16,
@@ -68,13 +77,17 @@ describe('SoxEffect', function() {
           endianness: 'LE', signed: true
         })
 
+        // When all the data has been read, test that we got what we expected
         soxEffect.on('end', function() {
           ended = true
+
           // Concatenate all the blocks in one 
           allAudio = _.reduce(blocks, function(all, block) {
             return all.concat(block)
           }, new AudioBuffer(2, 0, 44100))
-          // Test that we got teh expected values
+          assert.equal(Math.floor(allAudio.length / 4410), 21)
+
+          // Test that we got the expected values
           _.range(21).forEach(function(i) {
             sliced = allAudio.slice(i * 4410, (i + 1) * 4410)
             helpers.assertAllValuesApprox(sliced.getChannelData(0), -1 + i * 0.1)
@@ -83,9 +96,63 @@ describe('SoxEffect', function() {
           done()
         })
 
+        // Reading all the data block by block
         var audioTick = function() {
           block = soxEffect._tick()
           assert.equal(block.numberOfChannels, 2)
+          assert.equal(block.length, 128)
+          assert.equal(block.sampleRate, 44100)
+          blocks.push(block)
+          if (!ended) setTimeout(audioTick, 128/44100)
+        }
+        audioTick()
+
+      })
+
+    })
+
+    it('should open a file with different sampleRate and output should be context\'s sampleRate', function(done) {
+      var helpers = require('./helpers')({approx: 0.1}) // bigger error because of resampling
+        , soxEffect = new SoxEffect(dummyContext, __dirname + '/sounds/steps-16b-22khz-mono.wav', 'gain', 13.97847)
+        , blocks = [], block
+        , allAudio, sliced
+        , ended = false
+      soxEffect.on('error', function(err) { console.log('ERRRR', err) })
+
+      soxEffect.on('ready', function() {
+
+        // Testing the format
+        assert.deepEqual(soxEffect.format, {
+          numberOfChannels: 1,
+          bitDepth: 16,
+          sampleRate: 22050,
+          endianness: 'LE', signed: true
+        })
+
+        // When all the data has been read, test that we got what we expected
+        // The file original sample rate doesn't matter, the context's sampleRate overrides it.
+        soxEffect.on('end', function() {
+          ended = true
+
+          // Concatenate all the blocks in one 
+          allAudio = _.reduce(blocks, function(all, block) {
+            return all.concat(block)
+          }, new AudioBuffer(1, 0, 44100))
+          assert.equal(Math.floor(allAudio.length / 4410), 21)
+
+          // Test that we got teh expected values
+          _.range(21).forEach(function(i) {
+            sliced = allAudio.slice(10 + i * 4410, (i + 1) * 4410 - 10) // +/- 10 because or resamplign errors
+            console.log(_.toArray(sliced.getChannelData(0)))
+            helpers.assertAllValuesApprox(sliced.getChannelData(0), -1 + i * 0.1)
+          })
+          done()
+        })
+
+        // Reading all the data block by block
+        var audioTick = function() {
+          block = soxEffect._tick()
+          assert.equal(block.numberOfChannels, 1)
           assert.equal(block.length, 128)
           assert.equal(block.sampleRate, 44100)
           blocks.push(block)
