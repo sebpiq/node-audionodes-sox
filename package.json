@@ -19,7 +19,7 @@
   "dependencies" : {
     "underscore": "1.4.x",
     "async": "0.2.x",
-    "audiobuffer": "*"
+    "debug": "0.7.x"
   },
   "analyze": false,
   "devDependencies": {
